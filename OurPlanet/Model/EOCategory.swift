@@ -23,6 +23,7 @@
 import Foundation
 
 struct EOCategory: Equatable {
+    
     let id: Int
     let name: String
     let description: String
@@ -45,4 +46,5 @@ struct EOCategory: Equatable {
     static func ==(lhs: EOCategory, rhs: EOCategory) -> Bool {
         return lhs.id == rhs.id
     }
+    
 }

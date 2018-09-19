@@ -151,6 +151,7 @@
 				TargetAttributes = {
 					3D46E6231E258DFC0090C97B = {
 						CreatedOnToolsVersion = 8.2.1;
+						DevelopmentTeam = X65GN27YEQ;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -380,10 +381,10 @@
 			baseConfigurationReference = 98088A1F6C53F47AD0685D99 /* Pods-OurPlanet.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = X65GN27YEQ;
 				INFOPLIST_FILE = OurPlanet/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.florentpillet.OurPlanet;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lc.Combinestagram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -393,10 +394,10 @@
 			baseConfigurationReference = 243DB62E1F7FC4F2BB6744FC /* Pods-OurPlanet.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = X65GN27YEQ;
 				INFOPLIST_FILE = OurPlanet/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.florentpillet.OurPlanet;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lc.Combinestagram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
