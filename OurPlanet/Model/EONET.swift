@@ -26,25 +26,67 @@ import RxSwift
 import RxCocoa
 
 class EONET {
-  static let API = "https://eonet.sci.gsfc.nasa.gov/api/v2.1"
-  static let categoriesEndpoint = "/categories"
-  static let eventsEndpoint = "/events"
-
-  static var ISODateReader: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZ"
-    return formatter
-  }()
-
-  static func filteredEvents(events: [EOEvent], forCategory category: EOCategory) -> [EOEvent] {
-    return events.filter { event in
-      return event.categories.contains(category.id) &&
-             !category.events.contains {
-               $0.id == event.id
-             }
+    static let API = "https://eonet.sci.gsfc.nasa.gov/api/v2.1"
+    static let categoriesEndpoint = "/categories"
+    static let eventsEndpoint = "/events"
+    
+    static var ISODateReader: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZ"
+        return formatter
+    }()
+    
+    static func filteredEvents(events: [EOEvent], forCategory category: EOCategory) -> [EOEvent] {
+        return events.filter { event in
+            return event.categories.contains(category.id) &&
+                !category.events.contains {
+                    $0.id == event.id
+            }
+            }
+            .sorted(by: EOEvent.compareDates)
     }
-    .sorted(by: EOEvent.compareDates)
-  }
-  
+    
+    static func request(endpoint: String, query: [String: Any] = [:]) -> Observable<[String: Any]> {
+        do {
+            guard let url = URL(string: API)?.appendingPathComponent(endpoint),
+                var components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+                    throw EOError.invalidURL(endpoint)
+            }
+            
+            components.queryItems = try query.compactMap {
+                guard let v = $1 as? CustomStringConvertible else {
+                    throw EOError.invalidParameter($0, $1)
+                }
+                return URLQueryItem(name: $0, value: v.description)
+            }
+            
+            guard let finalURL = components.url else {
+                throw EOError.invalidURL(endpoint)
+            }
+            
+            return URLSession.shared.rx.response(request: URLRequest(url: finalURL))
+                .map { _, d -> [String: Any] in
+                    guard let json = try? JSONSerialization.jsonObject(with: d, options: []),
+                        let r = json as? [String: Any] else {
+                            throw EOError.invalidJSON(finalURL.absoluteString)
+                    }
+                    return r
+            }
+        } catch {
+            return Observable.empty()
+        }
+    }
+    
+    static let categories: Observable<[EOCategory]> = {
+        return EONET.request(endpoint: categoriesEndpoint)
+            .map {
+                return ($0["categories"] as? [[String: Any]] ?? [])
+                    .compactMap(EOCategory.init)
+                    .sorted { $0.name < $1.name }
+            }
+            .catchErrorJustReturn([])
+            .share(replay: 1, scope: .forever)
+    }()
+    
 }
