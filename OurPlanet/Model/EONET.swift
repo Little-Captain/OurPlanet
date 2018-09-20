@@ -96,7 +96,9 @@ class EONET {
     static func events(forLast days: Int = 360) -> Observable<[EOEvent]> {
         let openEvents = events(forLast: days, closed: false)
         let closedEvents = events(forLast: days, closed: true)
-        return openEvents.concat(closedEvents)
+        return Observable.of(openEvents, closedEvents)
+            .merge()
+            .reduce([]) { $0 + $1 }
     }
     
     fileprivate static func events(forLast days: Int, closed: Bool) -> Observable<[EOEvent]> {
