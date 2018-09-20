@@ -27,12 +27,19 @@ import RxCocoa
 class CategoriesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     @IBOutlet var tableView: UITableView!
+    var activityIndicator: UIActivityIndicatorView!
     
     let categories = Variable<[EOCategory]>([])
     let bag = DisposeBag()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        activityIndicator = UIActivityIndicatorView()
+        activityIndicator.color = .black
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: activityIndicator)
+        activityIndicator.startAnimating()
+        
         categories
             .asObservable()
             .subscribe(onNext: { [weak self] _ in
@@ -41,20 +48,35 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
                 }
             })
             .disposed(by: bag)
+        
         startDownload()
     }
     
     func startDownload() {
         let eoCategories = EONET.categories
-        let downloadedEvents = EONET.events()
-        let updatedCategories = Observable
-            .combineLatest(eoCategories, downloadedEvents) { categories, events -> [EOCategory] in
-                categories.map { category in
-                    var cat = category
-                    cat.events = events.filter { $0.categories.contains(category.id) }
-                    return cat
+        
+        let downloadedEvents = eoCategories
+            .flatMap { Observable.from($0.map { EONET.events(category: $0) }) }
+            .merge(maxConcurrent: 2)
+        
+        let updatedCategories = eoCategories
+            .flatMap {
+                downloadedEvents.scan($0) { updated, events in
+                    updated.map {
+                        let eventsForCategory = EONET.filteredEvents(events: events, forCategory: $0)
+                        if !eventsForCategory.isEmpty {
+                            var c = $0
+                            c.events += eventsForCategory
+                            return c
+                        }
+                        return $0
+                    }
                 }
-        }
+            }
+            .do(onCompleted: { [weak self] in
+                DispatchQueue.main.async { self?.activityIndicator?.stopAnimating() }
+            })
+        
         eoCategories
             .concat(updatedCategories)
             .bind(to: categories)
