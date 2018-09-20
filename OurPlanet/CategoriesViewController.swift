@@ -57,9 +57,19 @@ class CategoriesViewController: UIViewController, UITableViewDataSource, UITable
         }
         eoCategories
             .concat(updatedCategories)
-            .debug(nil, trimOutput: true)
             .bind(to: categories)
             .disposed(by: bag)
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let category = categories.value[indexPath.row]
+        if !category.events.isEmpty {
+            let eventsController = storyboard!.instantiateViewController(withIdentifier: "events") as! EventsViewController
+            eventsController.title = category.name
+            eventsController.events.value = category.events
+            navigationController!.pushViewController(eventsController, animated: true)
+        }
+        tableView.deselectRow(at: indexPath, animated: true)
     }
     
     // MARK: UITableViewDataSource
