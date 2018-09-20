@@ -26,6 +26,7 @@ import RxSwift
 import RxCocoa
 
 class EONET {
+    
     static let API = "https://eonet.sci.gsfc.nasa.gov/api/v2.1"
     static let categoriesEndpoint = "/categories"
     static let eventsEndpoint = "/events"
@@ -81,12 +82,33 @@ class EONET {
     static let categories: Observable<[EOCategory]> = {
         return EONET.request(endpoint: categoriesEndpoint)
             .map {
-                return ($0["categories"] as? [[String: Any]] ?? [])
+                guard let raw = $0["categories"] as? [[String: Any]] else {
+                    throw EOError.invalidJSON(categoriesEndpoint)
+                }
+                return raw
                     .compactMap(EOCategory.init)
                     .sorted { $0.name < $1.name }
             }
             .catchErrorJustReturn([])
             .share(replay: 1, scope: .forever)
     }()
+    
+    static func events(forLast days: Int = 360) -> Observable<[EOEvent]> {
+        let openEvents = events(forLast: days, closed: false)
+        let closedEvents = events(forLast: days, closed: true)
+        return openEvents.concat(closedEvents)
+    }
+    
+    fileprivate static func events(forLast days: Int, closed: Bool) -> Observable<[EOEvent]> {
+        return request(endpoint: eventsEndpoint,
+                       query: ["days": NSNumber(value: days), "status": (closed ? "closed" : "open")])
+            .map {
+                guard let raw = $0["events"] as? [[String: Any]] else {
+                    throw EOError.invalidJSON(eventsEndpoint)
+                }
+                return raw.compactMap(EOEvent.init)
+            }
+            .catchErrorJustReturn([])
+    }
     
 }

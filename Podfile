@@ -2,8 +2,8 @@ use_frameworks!
 platform :ios, '11.0'
 
 target 'OurPlanet' do
-    pod 'RxSwift', '~> 4.0'
-    pod 'RxCocoa', '~> 4.0'
+    pod 'RxSwift', '~> 4.1.0'
+    pod 'RxCocoa', '~> 4.1.0'
 end
 
 # enable tracing resources
